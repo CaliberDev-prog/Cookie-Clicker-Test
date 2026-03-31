@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <title>🍪 Cookie Clicker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="grain"></div>
+  <div class="amb-wrap">
+    <div class="amb a1"></div>
+    <div class="amb a2"></div>
+    <div class="amb a3"></div>
+    <div class="amb a4"></div>
+  </div>
+
+  <!-- BAKERY NAME MODAL (first-time) -->
+  <div id="bakery-name-modal" class="modal-backdrop hidden">
+    <div class="modal-box bakery-name-box">
+      <div class="modal-cookie">🍪</div>
+      <div class="modal-badge">Welcome, Baker!</div>
+      <div class="bakery-name-intro">Every great bakery needs a name. What will yours be called?<br><span class="bakery-name-hint">This will appear on the global leaderboard.</span></div>
+      <div class="bakery-name-input-wrap">
+        <input type="text" id="bakery-name-input" class="bakery-name-input" placeholder="e.g. Grandma's Secret Cookies" maxlength="28" autocomplete="off" spellcheck="false">
+        <div class="bakery-name-char" id="bakery-name-char">28</div>
+      </div>
+      <button class="modal-close-btn" id="bakery-name-confirm" onclick="confirmBakeryName()">Open My Bakery →</button>
+    </div>
+  </div>
+
+  <!-- DEV LOG MODAL -->
+  <div id="devlog-modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-cookie">🍪</div>
+      <div class="modal-badge" id="modal-version-badge">Dev Log</div>
+      <div class="modal-body" id="modal-body"></div>
+      <button class="modal-close-btn" onclick="closeDevlog()">Start Baking →</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal-box settings-box">
+      <div class="settings-header">
+        <span class="settings-icon">⚙️</span>
+        <h2 class="settings-title">Settings</h2>
+      </div>
+      <div class="settings-body">
+        <div class="setting-group">
+          <div class="setting-group-label">🔊 Sound FX</div>
+          <div class="setting-row">
+            <label class="setting-label">Click Sounds</label>
+            <button class="toggle-btn" id="sfx-toggle" onclick="toggleSFX()">ON</button>
+          </div>
+          <div class="setting-row">
+            <label class="setting-label">SFX Volume</label>
+            <div class="slider-wrap">
+              <input type="range" class="vol-slider" id="sfx-vol" min="0" max="100" value="60" oninput="setSFXVol(this.value)">
+              <span class="vol-val" id="sfx-vol-val">60%</span>
+            </div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-group-label">🏪 Bakery</div>
+          <div class="setting-row leaderboard-name-row">
+            <label class="setting-label">Bakery Name</label>
+            <div class="name-input-wrap">
+              <input type="text" id="lb-name-input" class="lb-name-input" placeholder="My Bakery" maxlength="28">
+              <button class="lb-save-name-btn" onclick="saveLeaderboardName()">Save</button>
+            </div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-group-label">⚠️ Danger Zone</div>
+          <div class="setting-row">
+            <label class="setting-label">Hard Reset Everything</label>
+            <button class="toggle-btn red-btn" onclick="hardReset()">Reset</button>
+          </div>
+        </div>
+      </div>
+      <button class="modal-close-btn" onclick="closeSettings()">Close Settings</button>
+    </div>
+  </div>
+
+  <!-- GOLDEN COOKIE -->
+  <div id="golden-cookie" class="golden-cookie hidden" onclick="collectGolden()">
+    <span>🌟</span>
+    <div class="golden-label">Golden Cookie!</div>
+    <div class="golden-timer-ring"></div>
+  </div>
+
+  <!-- METEOR COOKIE (new event) -->
+  <div id="meteor-cookie" class="meteor-cookie hidden" onclick="collectMeteor()">
+    <span>☄️</span>
+    <div class="golden-label">Meteor!</div>
+  </div>
+
+  <!-- ACHIEVEMENT TOAST -->
+  <div id="achievement-toast" class="toast hidden">
+    <span class="toast-ico">🏆</span>
+    <div class="toast-content">
+      <div class="toast-eyebrow">Achievement Unlocked</div>
+      <div id="toast-name" class="toast-name"></div>
+    </div>
+    <div class="toast-bar"></div>
+  </div>
+
+  <!-- FRENZY BANNER -->
+  <div id="frenzy-banner" class="frenzy-banner hidden">
+    <span class="frenzy-ico">🔥</span>
+    <span class="frenzy-text" id="frenzy-text">Cookie Frenzy! 7× for 30s</span>
+    <div class="frenzy-progress" id="frenzy-progress"></div>
+  </div>
+
+  <!-- BLIZZARD BANNER (new) -->
+  <div id="blizzard-banner" class="blizzard-banner hidden">
+    <span class="frenzy-ico">❄️</span>
+    <span class="frenzy-text" id="blizzard-text">Cookie Blizzard! Free cookies raining down!</span>
+    <div class="frenzy-progress" id="blizzard-progress"></div>
+  </div>
+
+  <!-- APP -->
+  <div class="shell" id="main-shell">
+
+    <!-- LEFT PANEL -->
+    <aside class="left-panel" id="left-panel">
+
+      <div class="logo-row">
+        <div class="logo">🍪 <span id="bakery-logo-name">Bakery</span></div>
+        <button class="settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
+      </div>
+
+      <div class="cookie-stage">
+        <div class="c-orbit o1"></div>
+        <div class="c-orbit o2"></div>
+        <div class="c-halo"></div>
+        <button class="cookie-btn" id="cookie-btn" ontouchstart="handleClickTouch(event)" onclick="handleClick(event)">🍪</button>
+      </div>
+
+      <div class="score-block">
+        <div class="score-num" id="score">0</div>
+        <div class="score-sub">cookies</div>
+      </div>
+
+      <div class="rate-row">
+        <div class="rate-cell">
+          <span class="rv" id="cpc">1</span>
+          <span class="rk">/ click</span>
+        </div>
+        <div class="rate-dot"></div>
+        <div class="rate-cell">
+          <span class="rv" id="cps">0</span>
+          <span class="rk">/ sec</span>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-cell"><span class="sv" id="stat-lifetime">0</span><span class="sk">all‑time</span></div>
+        <div class="stat-cell"><span class="sv" id="stat-buildings">0</span><span class="sk">buildings</span></div>
+        <div class="stat-cell"><span class="sv" id="stat-prestige">0</span><span class="sk">prestiges</span></div>
+      </div>
+
+      <!-- Buy quantity -->
+      <div class="qty-bar">
+        <span class="qty-label">Buy</span>
+        <div class="qty-btns">
+          <button class="qty-btn active" onclick="setBuyQty(1,this)">1×</button>
+          <button class="qty-btn"        onclick="setBuyQty(10,this)">10×</button>
+          <button class="qty-btn"        onclick="setBuyQty(100,this)">100×</button>
+          <button class="qty-btn max"    onclick="setBuyQty('max',this)">MAX</button>
+        </div>
+      </div>
+
+      <!-- Prestige -->
+      <div id="prestige-zone" class="prestige-zone hidden">
+        <div class="pz-glow"></div>
+        <div class="pz-inner">
+          <span class="pz-star">✨</span>
+          <div>
+            <div class="pz-title">Prestige Available</div>
+            <div class="pz-sub">Gain permanent <strong id="prestige-mult-display">1.05×</strong> bonus</div>
+          </div>
+        </div>
+        <button class="pz-btn" onclick="doPrestige()">Prestige Now</button>
+      </div>
+      <div id="active-pres" class="active-pres hidden"></div>
+
+    </aside>
+
+    <!-- RIGHT PANEL -->
+    <main class="right-panel" id="right-panel">
+      <nav class="tab-nav" id="tab-nav">
+        <button class="tab active" id="tab-btn-upgrades"     onclick="showTab('upgrades',this)"><span>⚡</span><span class="tab-lbl"> Upgrades</span></button>
+        <button class="tab"        id="tab-btn-buildings"    onclick="showTab('buildings',this)"><span>🏗</span><span class="tab-lbl"> Buildings</span></button>
+        <button class="tab"        id="tab-btn-specials"     onclick="showTab('specials',this)"><span>🎁</span><span class="tab-lbl"> Specials</span></button>
+        <button class="tab"        id="tab-btn-achievements" onclick="showTab('achievements',this)"><span>🏆</span><span class="tab-lbl"> Achieve</span></button>
+        <button class="tab"        id="tab-btn-leaderboard"  onclick="showTab('leaderboard',this)"><span>🌍</span><span class="tab-lbl"> Leaderboards</span></button>
+        <button class="tab"        id="tab-btn-updates"      onclick="showTab('updates',this)"><span>📋</span><span class="tab-lbl"> Updates</span></button>
+      </nav>
+
+      <!-- UPGRADES TAB -->
+      <div id="tab-upgrades" class="pane active">
+        <div class="pane-inner">
+          <div class="pane-hd">
+            <h2 class="pane-title">Click Upgrades</h2>
+            <p class="pane-sub">One-time boosts that multiply your clicking power</p>
+          </div>
+          <div id="upgrades-grid" class="upg-grid"></div>
+        </div>
+      </div>
+
+      <!-- BUILDINGS TAB -->
+      <div id="tab-buildings" class="pane">
+        <div class="pane-inner">
+          <div class="pane-hd">
+            <h2 class="pane-title">Buildings</h2>
+            <p class="pane-sub">Passive income — each costs +15% more per owned</p>
+          </div>
+          <div id="buildings-list" class="bld-list"></div>
+        </div>
+      </div>
+
+      <!-- SPECIALS TAB -->
+      <div id="tab-specials" class="pane">
+        <div class="pane-inner">
+          <div class="pane-hd">
+            <h2 class="pane-title">Special Items</h2>
+            <p class="pane-sub">Unique one-time purchases with powerful effects</p>
+          </div>
+          <div id="specials-grid" class="spec-grid"></div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS TAB -->
+      <div id="tab-achievements" class="pane">
+        <div class="pane-inner">
+          <div class="pane-hd">
+            <h2 class="pane-title">Achievements</h2>
+            <p class="pane-sub" id="ach-progress">0 / 0 unlocked</p>
+          </div>
+          <div id="achievements-grid" class="ach-grid"></div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD TAB -->
+      <div id="tab-leaderboard" class="pane">
+        <div class="pane-inner">
+          <div class="pane-hd">
+            <h2 class="pane-title">🌍 Global Leaderboard</h2>
+            <p class="pane-sub">Top bakeries worldwide — lifetime cookies baked</p>
+          </div>
+          <div class="lb-controls">
+            <button class="lb-btn secondary" onclick="loadLeaderboard()">🔄 Refresh</button>
+          </div>
+          <div id="lb-loading" class="lb-loading hidden">Loading scores...</div>
+          <div id="lb-error" class="lb-error hidden"></div>
+          <div id="lb-list" class="lb-list"></div>
+          <div class="lb-note">Your score auto-saves every 30 seconds. Set your bakery name in ⚙️ Settings.</div>
+        </div>
+      </div>
+
+      <!-- UPDATES TAB -->
+      <div id="tab-updates" class="pane">
+        <div class="pane-inner">
+          <div class="pane-hd">
+            <h2 class="pane-title">Patch Notes</h2>
+            <p class="pane-sub">Official updates from the developer</p>
+          </div>
+          <div id="patch-feed" class="patch-feed"></div>
+          <div id="patch-empty" class="patch-empty">No updates posted yet.</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav" id="mobile-nav">
+    <button class="mnav-btn active" id="mnav-bake" onclick="mobileShowPanel('bake', this)">
+      <span class="mnav-ico">🍪</span>
+      <span class="mnav-lbl">Bake</span>
+    </button>
+    <button class="mnav-btn" id="mnav-upgrades" onclick="mobileShowPanel('upgrades', this)">
+      <span class="mnav-ico">⚡</span>
+      <span class="mnav-lbl">Upgrade</span>
+    </button>
+    <button class="mnav-btn" id="mnav-buildings" onclick="mobileShowPanel('buildings', this)">
+      <span class="mnav-ico">🏗</span>
+      <span class="mnav-lbl">Build</span>
+    </button>
+    <button class="mnav-btn" id="mnav-specials" onclick="mobileShowPanel('specials', this)">
+      <span class="mnav-ico">🎁</span>
+      <span class="mnav-lbl">Special</span>
+    </button>
+    <button class="mnav-btn" id="mnav-more" onclick="mobileShowPanel('more', this)">
+      <span class="mnav-ico">•••</span>
+      <span class="mnav-lbl">More</span>
+    </button>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>
